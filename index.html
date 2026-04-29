@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 暑假旅遊推薦</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', sans-serif; }
+  .card { transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(0,0,0,0.12); }
+  .score-bar { transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+  .pref-row:hover .pref-icon { transform: scale(1.1); }
+  .pref-icon { transition: transform 0.2s; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .card-in { animation: fadeUp 0.3s ease forwards; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .match-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Header -->
+<header class="bg-gradient-to-r from-blue-700 to-cyan-500 text-white py-10 px-4 text-center shadow-lg">
+  <div class="text-5xl mb-2">✈️</div>
+  <h1 class="text-3xl font-black tracking-tight mb-1">2026 暑假旅遊推薦</h1>
+  <p class="text-blue-100 text-sm">告訴我你在意什麼，我幫你找最適合的目的地</p>
+</header>
+
+<!-- Preference Form -->
+<section class="max-w-2xl mx-auto mt-8 px-4">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-cyan-50">
+      <h2 class="font-bold text-gray-800 text-base">你的旅遊偏好</h2>
+      <p class="text-xs text-gray-400 mt-0.5">每個選項都會影響推薦結果，選「不在意」代表該項不列入評分</p>
+    </div>
+
+    <div class="divide-y divide-gray-100" id="pref-form">
+
+      <!-- Weather -->
+      <div class="pref-row flex items-center gap-4 px-6 py-4">
+        <div class="pref-icon text-3xl w-10 text-center">☀️</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">天氣偏好</div>
+          <div class="text-xs text-gray-400">6–8 月氣候類型</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="weather">
+          <option value="any">不在意</option>
+          <option value="beach">熱帶沙灘型（炎熱晴朗）</option>
+          <option value="comfort">溫和舒適型（25°C 上下）</option>
+          <option value="cool">涼爽避暑型（20°C 以下）</option>
+        </select>
+      </div>
+
+      <!-- Flight -->
+      <div class="pref-row flex items-center gap-4 px-6 py-4">
+        <div class="pref-icon text-3xl w-10 text-center">💺</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">機票預算</div>
+          <div class="text-xs text-gray-400">來回含稅，從台灣出發</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="flight">
+          <option value="any">不在意</option>
+          <option value="cheap">越便宜越好（亞洲近程優先）</option>
+          <option value="medium">NT$15,000–35,000 可接受</option>
+          <option value="far">遠程也沒問題（不設限）</option>
+        </select>
+      </div>
+
+      <!-- Hotel -->
+      <div class="pref-row flex items-center gap-4 px-6 py-4">
+        <div class="pref-icon text-3xl w-10 text-center">🏨</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">住宿預算</div>
+          <div class="text-xs text-gray-400">每晚平均（含稅）</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="hotel">
+          <option value="any">不在意</option>
+          <option value="budget">平價優先（NT$2,000 以內）</option>
+          <option value="medium">適中（NT$2,000–4,000）</option>
+          <option value="quality">舒適品質，費用不限</option>
+        </select>
+      </div>
+
+      <!-- Safety -->
+      <div class="pref-row flex items-center gap-4 px-6 py-4">
+        <div class="pref-icon text-3xl w-10 text-center">🛡️</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">治安要求</div>
+          <div class="text-xs text-gray-400">旅遊安全程度</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="safety">
+          <option value="any">不在意</option>
+          <option value="basic">基本安全即可</option>
+          <option value="high">治安越好越好</option>
+        </select>
+      </div>
+
+      <!-- Cost -->
+      <div class="pref-row flex items-center gap-4 px-6 py-4">
+        <div class="pref-icon text-3xl w-10 text-center">💰</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">當地消費水準</div>
+          <div class="text-xs text-gray-400">餐飲、交通、活動費用</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="cost">
+          <option value="any">不在意</option>
+          <option value="cheap">越便宜越好</option>
+          <option value="medium">適中即可</option>
+          <option value="premium">高消費也 OK</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+      <button onclick="resetPrefs()" class="text-sm text-gray-400 hover:text-gray-600 transition">重設</button>
+      <div class="text-xs text-gray-400" id="active-label">目前全部不在意（顯示預設排名）</div>
+    </div>
+  </div>
+</section>
+
+<!-- Results -->
+<section class="max-w-5xl mx-auto mt-8 px-4 pb-16">
+
+  <!-- Top 3 -->
+  <div id="top3-section">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xl">🏆</span>
+      <h2 class="text-lg font-bold text-gray-800">最推薦目的地</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8" id="top3"></div>
+  </div>
+
+  <!-- All -->
+  <div>
+    <div class="flex items-center gap-2 mb-4">
+      <h2 class="text-base font-bold text-gray-700">完整排名</h2>
+      <span class="text-xs text-gray-400" id="count-label"></span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="cards"></div>
+  </div>
+
+</section>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 text-2xl leading-none">&times;</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const prefs = { weather: 'any', flight: 'any', hotel: 'any', safety: 'any', cost: 'any' };
+
+const destinations = [
+  {
+    id: 'japan', name: '日本', flag: '🇯🇵', region: '東亞',
+    tag: '文化・美食・都市',
+    cities: '東京・大阪・京都・北海道',
+    flight: 'NT$8,000–15,000', hotel: 'NT$1,800–3,500/晚', daily: 'NT$1,500–2,500/日',
+    scores: { weather: 5.5, flight: 8.5, hotel: 6.5, safety: 9.5, cost: 7.0 },
+    wx: { beach: 4.5, comfort: 5.5, cool: 6.5 },
+    details: {
+      weather: '6–8月炎熱潮濕，東京均溫28–33°C，7月起颱風季。北海道例外，20°C涼爽。',
+      flight: '台北直飛班次最多，約 NT$8,000–15,000（來回），是選擇最豐富的航線。',
+      hotel: '商務旅館品質好，約 NT$1,800–3,500/晚；青旅 NT$500起。',
+      safety: '全球治安最佳國家之一，犯罪率極低，迷路問路都有人幫忙。',
+      cost: '餐飲適中，拉麵 NT$150、便利商店餐 NT$100。一日約 NT$1,500–2,500。'
+    }
+  },
+  {
+    id: 'korea', name: '韓國', flag: '🇰🇷', region: '東亞',
+    tag: '購物・K-POP・美食',
+    cities: '首爾・釜山・濟州島',
+    flight: 'NT$5,000–10,000', hotel: 'NT$1,500–3,000/晚', daily: 'NT$1,200–2,200/日',
+    scores: { weather: 6.0, flight: 9.0, hotel: 7.5, safety: 8.5, cost: 7.5 },
+    wx: { beach: 4.5, comfort: 6.0, cool: 6.0 },
+    details: {
+      weather: '首爾夏季25–32°C，6月梅雨，7月高溫潮濕，8月漸涼。濟州島有海灘。',
+      flight: '全台最便宜目的地之一，NT$5,000–10,000（來回），LCC 選擇多。',
+      hotel: '中級旅館 NT$1,500–3,000/晚，首爾市中心選擇豐富。',
+      safety: '治安良好，旅遊設施完善，地鐵系統非常方便。',
+      cost: '韓元親民，炸雞啤酒套餐 NT$400，一日約 NT$1,200–2,200。'
+    }
+  },
+  {
+    id: 'vietnam', name: '越南', flag: '🇻🇳', region: '東南亞',
+    tag: '古城・海灘・超值',
+    cities: '峴港・會安・河內・胡志明市',
+    flight: 'NT$5,000–10,000', hotel: 'NT$600–1,800/晚', daily: 'NT$500–1,200/日',
+    scores: { weather: 5.5, flight: 9.0, hotel: 9.0, safety: 7.5, cost: 9.5 },
+    wx: { beach: 7.0, comfort: 5.5, cool: 2.0 },
+    details: {
+      weather: '中部峴港6–8月為乾季、晴天多，是全越南夏季最佳去處。北部河內多雨。',
+      flight: '台北直飛約 NT$5,000–10,000（來回），超高 CP 值航線。',
+      hotel: '民宿 NT$600起，精品飯店 NT$1,800/晚，住宿超值。',
+      safety: '旅遊環境安全，注意馬路交通混亂。',
+      cost: '全東南亞最超值，河粉 NT$50，一日花費約 NT$500–1,200。'
+    }
+  },
+  {
+    id: 'thailand', name: '泰國', flag: '🇹🇭', region: '東南亞',
+    tag: '廟宇・美食・SPA',
+    cities: '清邁・清萊・曼谷（避開普吉雨季）',
+    flight: 'NT$6,000–12,000', hotel: 'NT$900–2,000/晚', daily: 'NT$800–1,500/日',
+    scores: { weather: 4.5, flight: 8.5, hotel: 9.0, safety: 6.5, cost: 9.0 },
+    wx: { beach: 5.5, comfort: 4.0, cool: 2.0 },
+    details: {
+      weather: '6–8月為雨季，氣溫30–35°C。清邁北部較涼且雨較少，普吉降雨頻繁。',
+      flight: '直飛約 NT$6,000–12,000（來回），班次多。',
+      hotel: '背包旅館 NT$400起，精品飯店 NT$2,000/晚，豪華型超值。',
+      safety: '旅遊區整體安全，熱門景點扒竊需注意。',
+      cost: '物價極低，街頭美食 NT$50–150，SPA 一小時 NT$200。'
+    }
+  },
+  {
+    id: 'bali', name: '峇里島', flag: '🇮🇩', region: '東南亞',
+    tag: '度假・Villa・衝浪',
+    cities: '烏布・庫塔・水明漾・努沙杜瓦',
+    flight: 'NT$8,000–14,000', hotel: 'NT$1,500–5,000/晚', daily: 'NT$800–1,800/日',
+    scores: { weather: 8.5, flight: 8.0, hotel: 8.5, safety: 7.5, cost: 9.0 },
+    wx: { beach: 9.5, comfort: 7.5, cool: 1.5 },
+    details: {
+      weather: '6–8月是峇里島乾季！陽光充足，氣溫26–30°C，是全年最佳旅遊時段。',
+      flight: '直飛或1停，約 NT$8,000–14,000（來回）。',
+      hotel: '私人泳池Villa NT$1,500起，豪華度假村 NT$5,000+，CP 值在東南亞數一數二。',
+      safety: '旅遊設施完善，整體安全，注意道路交通。',
+      cost: 'SPA NT$200，帥氣餐廳 NT$300–600，一日花費約 NT$800–1,800。'
+    }
+  },
+  {
+    id: 'portugal', name: '葡萄牙', flag: '🇵🇹', region: '歐洲',
+    tag: '歷史・海岸・性價比最高歐洲',
+    cities: '里斯本・波多・阿爾加維海岸',
+    flight: 'NT$28,000–42,000', hotel: 'NT$2,500–4,500/晚', daily: 'NT$1,800–3,000/日',
+    scores: { weather: 9.0, flight: 4.0, hotel: 5.5, safety: 9.0, cost: 6.5 },
+    wx: { beach: 8.5, comfort: 9.5, cool: 5.0 },
+    details: {
+      weather: '6–8月是最佳旅遊季！里斯本25–28°C，陽光充足卻不悶熱，阿爾加維海岸絕美。',
+      flight: '需1–2次轉機，約 NT$28,000–42,000（來回）。',
+      hotel: '里斯本中級酒店 NT$2,500–4,500/晚，比西歐其他首都便宜。',
+      safety: '全球最安全國家之一，犯罪率極低，非常適合自由行。',
+      cost: '歐洲 CP 值最高，主餐 NT$300–600，一日花費約 NT$1,800–3,000。'
+    }
+  },
+  {
+    id: 'greece', name: '希臘', flag: '🇬🇷', region: '歐洲',
+    tag: '愛琴海・跳島・古蹟',
+    cities: '聖托里尼・雅典・米科諾斯・克里特',
+    flight: 'NT$28,000–45,000', hotel: 'NT$2,000–7,000/晚', daily: 'NT$2,000–3,500/日',
+    scores: { weather: 8.5, flight: 3.5, hotel: 5.5, safety: 7.5, cost: 6.5 },
+    wx: { beach: 9.5, comfort: 7.0, cool: 3.0 },
+    details: {
+      weather: '7–8月豔陽高照，均溫28–34°C，地中海天堂！偶有熱浪達40°C。',
+      flight: '需轉機，約 NT$28,000–45,000（來回）。',
+      hotel: '雅典中級酒店 NT$2,000–4,000/晚，聖托里尼旺季貴2–3倍。',
+      safety: '整體安全，雅典大城市注意扒竊。',
+      cost: '島嶼餐廳偏貴，一日花費約 NT$2,000–3,500。'
+    }
+  },
+  {
+    id: 'croatia', name: '克羅埃西亞', flag: '🇭🇷', region: '歐洲',
+    tag: '亞得里亞海・古城・隱藏瑰寶',
+    cities: '杜布羅夫尼克・斯普利特・普利特維采',
+    flight: 'NT$30,000–48,000', hotel: 'NT$2,000–4,500/晚', daily: 'NT$1,800–3,000/日',
+    scores: { weather: 8.5, flight: 3.5, hotel: 5.5, safety: 9.0, cost: 6.5 },
+    wx: { beach: 9.0, comfort: 8.0, cool: 4.0 },
+    details: {
+      weather: '7–8月地中海氣候，25–33°C，陽光燦爛，亞得里亞海水清澈碧藍。',
+      flight: '需轉機，約 NT$30,000–48,000（來回）。',
+      hotel: '斯普利特中級民宿 NT$2,000–4,000/晚，比同季希臘便宜。',
+      safety: '治安優良，歐洲最安全國家之一，非常適合獨旅。',
+      cost: '比西歐便宜，一日花費約 NT$1,800–3,000。'
+    }
+  },
+  {
+    id: 'spain', name: '西班牙', flag: '🇪🇸', region: '歐洲',
+    tag: '建築・美食・海灘・夜生活',
+    cities: '巴塞隆納・馬德里・聖塞巴斯提安',
+    flight: 'NT$28,000–42,000', hotel: 'NT$2,500–5,500/晚', daily: 'NT$2,000–3,500/日',
+    scores: { weather: 7.5, flight: 4.0, hotel: 5.0, safety: 7.5, cost: 6.0 },
+    wx: { beach: 8.0, comfort: 7.0, cool: 4.0 },
+    details: {
+      weather: '夏季偏熱，馬德里可達38°C，巴塞隆納海風涼爽約25–30°C，南部更熱。',
+      flight: '需轉機，約 NT$28,000–42,000（來回）。',
+      hotel: '巴塞隆納旺季中級酒店 NT$2,500–5,500/晚，旺季貴。',
+      safety: '整體安全，拉蘭布拉大道、地鐵注意扒竊。',
+      cost: 'Tapas 吧划算，一日花費約 NT$2,000–3,500。'
+    }
+  },
+  {
+    id: 'italy', name: '義大利', flag: '🇮🇹', region: '歐洲',
+    tag: '藝術・美食・歷史',
+    cities: '羅馬・佛羅倫斯・威尼斯・阿瑪菲',
+    flight: 'NT$28,000–42,000', hotel: 'NT$3,000–6,000/晚', daily: 'NT$2,500–4,000/日',
+    scores: { weather: 7.0, flight: 4.0, hotel: 4.5, safety: 7.0, cost: 5.5 },
+    wx: { beach: 7.5, comfort: 6.5, cool: 3.5 },
+    details: {
+      weather: '夏季炎熱擁擠，羅馬30–35°C，北部米蘭較涼，8月是觀光旺季人潮爆炸。',
+      flight: '需轉機，約 NT$28,000–42,000（來回）。',
+      hotel: '羅馬中級酒店 NT$3,000–6,000/晚，旺季建議提早半年訂。',
+      safety: '整體安全，火車站、地鐵扒竊集團要注意。',
+      cost: '物價中等偏高，景點附近餐廳貴，一日約 NT$2,500–4,000。'
+    }
+  },
+  {
+    id: 'czech', name: '捷克', flag: '🇨🇿', region: '歐洲',
+    tag: '童話古城・啤酒・中歐',
+    cities: '布拉格・克魯姆洛夫・卡羅維瓦利',
+    flight: 'NT$28,000–40,000', hotel: 'NT$1,800–3,500/晚', daily: 'NT$1,500–2,500/日',
+    scores: { weather: 7.5, flight: 4.0, hotel: 6.5, safety: 8.5, cost: 7.0 },
+    wx: { beach: 2.0, comfort: 8.5, cool: 8.0 },
+    details: {
+      weather: '6–8月舒適宜人，布拉格均溫20–27°C，適合步行，偶有午後雷陣雨。',
+      flight: '需轉機，約 NT$28,000–40,000（來回）。',
+      hotel: '布拉格中級酒店 NT$1,800–3,500/晚，比西歐便宜約40%。',
+      safety: '治安優良，犯罪率低，適合自由行。',
+      cost: '中歐最超值，生啤酒 NT$50，一日花費約 NT$1,500–2,500。'
+    }
+  },
+  {
+    id: 'turkey', name: '土耳其', flag: '🇹🇷', region: '其他',
+    tag: '熱氣球・古文明・土耳其浴',
+    cities: '伊斯坦堡・卡帕多奇亞・棉堡・安塔利亞',
+    flight: 'NT$15,000–28,000', hotel: 'NT$1,000–2,500/晚', daily: 'NT$800–1,800/日',
+    scores: { weather: 7.0, flight: 6.0, hotel: 8.0, safety: 5.5, cost: 8.5 },
+    wx: { beach: 8.5, comfort: 6.5, cool: 3.5 },
+    details: {
+      weather: '地中海沿岸夏季晴朗，安塔利亞28–35°C；卡帕多奇亞內陸相對涼爽舒適。',
+      flight: '部分有直飛或1停，約 NT$15,000–28,000（來回），歐洲行程中最便宜。',
+      hotel: '里拉大幅貶值，物價對台灣人超便宜，中級酒店 NT$1,000–2,500/晚。',
+      safety: '主要旅遊區尚可，鄰近敘利亞邊境需迴避，出發前確認外交部旅遊警示。',
+      cost: '匯率優勢極大，一日花費約 NT$800–1,800，是歐式體驗中最便宜的。'
+    }
+  },
+  {
+    id: 'iceland', name: '冰島', flag: '🇮🇸', region: '其他',
+    tag: '白夜・極地地景・健行',
+    cities: '雷克雅維克・黃金圈・斯奈山半島',
+    flight: 'NT$35,000–55,000', hotel: 'NT$5,000–9,000/晚', daily: 'NT$4,000–8,000/日',
+    scores: { weather: 6.5, flight: 3.0, hotel: 2.5, safety: 9.5, cost: 2.5 },
+    wx: { beach: 1.0, comfort: 4.5, cool: 10.0 },
+    details: {
+      weather: '6–8月白夜奇景，幾乎無黑夜！均溫10–15°C，涼爽但多變，需帶防水外套。',
+      flight: '需轉機，約 NT$35,000–55,000（來回），機票昂貴。',
+      hotel: '物價全球最貴之一，中級旅館 NT$5,000–9,000/晚。',
+      safety: '全球最安全國家排名第一，零犯罪壓力。',
+      cost: '物價極高，一杯咖啡 NT$200，一日花費約 NT$4,000–8,000。'
+    }
+  },
+  {
+    id: 'canada', name: '加拿大', flag: '🇨🇦', region: '其他',
+    tag: '大自然・國家公園・多元文化',
+    cities: '溫哥華・多倫多・班夫國家公園',
+    flight: 'NT$38,000–58,000', hotel: 'NT$3,500–6,500/晚', daily: 'NT$3,000–5,000/日',
+    scores: { weather: 7.5, flight: 3.0, hotel: 4.0, safety: 8.5, cost: 4.5 },
+    wx: { beach: 3.5, comfort: 8.0, cool: 9.0 },
+    details: {
+      weather: '夏季舒適，溫哥華18–24°C，班夫山地壯闊15–22°C，非常適合戶外活動。',
+      flight: '需轉機，約 NT$38,000–58,000（來回），機票最貴選項之一。',
+      hotel: '溫哥華中級酒店 NT$3,500–6,500/晚，班夫國家公園旺季需提前預訂。',
+      safety: '治安良好，成熟旅遊基礎設施。',
+      cost: '加拿大物價高，一日花費約 NT$3,000–5,000。'
+    }
+  },
+  {
+    id: 'uk', name: '英國', flag: '🇬🇧', region: '歐洲',
+    tag: '歷史・博物館・蘇格蘭高地',
+    cities: '倫敦・愛丁堡・科茲沃爾德',
+    flight: 'NT$28,000–45,000', hotel: 'NT$4,500–8,000/晚', daily: 'NT$3,500–6,000/日',
+    scores: { weather: 6.0, flight: 3.5, hotel: 3.5, safety: 7.0, cost: 4.0 },
+    wx: { beach: 2.0, comfort: 6.5, cool: 8.5 },
+    details: {
+      weather: '夏季涼爽，倫敦18–25°C，天氣善變，可能突然大雨，愛丁堡更涼。',
+      flight: '需轉機，約 NT$28,000–45,000（來回）。',
+      hotel: '倫敦物價全歐最高，中級酒店 NT$4,500–8,000/晚。',
+      safety: '整體安全，大城市扒竊需注意。',
+      cost: '英鎊強勢，一日花費約 NT$3,500–6,000。'
+    }
+  },
+];
+
+const cats = [
+  { key: 'weather', label: '天氣', emoji: '☀️' },
+  { key: 'flight', label: '機票', emoji: '💺' },
+  { key: 'hotel', label: '住宿', emoji: '🏨' },
+  { key: 'safety', label: '治安', emoji: '🛡️' },
+  { key: 'cost', label: '物價', emoji: '💰' },
+];
+
+function scoreColor(s) {
+  if (s >= 8) return '#10b981';
+  if (s >= 6.5) return '#3b82f6';
+  if (s >= 5) return '#f59e0b';
+  return '#ef4444';
+}
+
+function calcScore(d) {
+  let total = 0, w = 0;
+
+  // Weather
+  const wx = prefs.weather;
+  if (wx === 'beach')   { total += d.wx.beach   * 3; w += 3; }
+  else if (wx === 'comfort') { total += d.wx.comfort * 3; w += 3; }
+  else if (wx === 'cool')    { total += d.wx.cool    * 3; w += 3; }
+  else { total += d.scores.weather * 1; w += 1; }
+
+  // Flight
+  const fl = prefs.flight;
+  if (fl === 'cheap')  { total += d.scores.flight * 3; w += 3; }
+  else if (fl === 'medium') { total += d.scores.flight * 1.5; w += 1.5; }
+  else if (fl === 'far')    { total += 5 * 0.5; w += 0.5; }
+  else { total += d.scores.flight * 1; w += 1; }
+
+  // Hotel
+  const ht = prefs.hotel;
+  if (ht === 'budget')  { total += d.scores.hotel * 3; w += 3; }
+  else if (ht === 'medium') { total += d.scores.hotel * 1.5; w += 1.5; }
+  else if (ht === 'quality') { total += 5 * 0.3; w += 0.3; }
+  else { total += d.scores.hotel * 1; w += 1; }
+
+  // Safety
+  const sf = prefs.safety;
+  if (sf === 'high')  { total += d.scores.safety * 3; w += 3; }
+  else if (sf === 'basic') {
+    const s = d.scores.safety >= 6 ? d.scores.safety : Math.max(1, d.scores.safety - 2);
+    total += s * 1.5; w += 1.5;
+  } else { total += d.scores.safety * 0.5; w += 0.5; }
+
+  // Cost
+  const co = prefs.cost;
+  if (co === 'cheap')   { total += d.scores.cost * 3; w += 3; }
+  else if (co === 'medium') { total += d.scores.cost * 1.5; w += 1.5; }
+  else if (co === 'premium') { total += 5 * 0.3; w += 0.3; }
+  else { total += d.scores.cost * 0.5; w += 0.5; }
+
+  return w > 0 ? total / w : 5;
+}
+
+function getSorted() {
+  return destinations
+    .map(d => ({ ...d, total: calcScore(d) }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function matchLabel(score) {
+  if (score >= 8)   return { text: '極度推薦', color: '#10b981', bg: '#d1fae5' };
+  if (score >= 7)   return { text: '非常推薦', color: '#3b82f6', bg: '#dbeafe' };
+  if (score >= 6)   return { text: '推薦', color: '#f59e0b', bg: '#fef3c7' };
+  if (score >= 5)   return { text: '尚可', color: '#9ca3af', bg: '#f3f4f6' };
+  return              { text: '不符偏好', color: '#ef4444', bg: '#fee2e2' };
+}
+
+function renderTop3(sorted) {
+  const medals = ['🥇', '🥈', '🥉'];
+  const borders = ['border-yellow-300 shadow-yellow-100', 'border-gray-300 shadow-gray-100', 'border-orange-200 shadow-orange-100'];
+  document.getElementById('top3').innerHTML = sorted.slice(0, 3).map((d, i) => {
+    const m = matchLabel(d.total);
+    return `
+    <div class="card bg-white rounded-2xl border-2 ${borders[i]} shadow-md p-5" onclick="openModal('${d.id}')">
+      <div class="flex justify-between items-start mb-3">
+        <div class="text-4xl">${medals[i]} ${d.flag}</div>
+        <div class="text-right">
+          <div class="text-2xl font-black" style="color:${scoreColor(d.total)}">${d.total.toFixed(1)}</div>
+          <span class="tag text-xs" style="color:${m.color}; background:${m.bg}">${m.text}</span>
+        </div>
+      </div>
+      <div class="text-lg font-bold text-gray-800">${d.name}</div>
+      <div class="text-xs text-gray-400 mb-3">${d.tag}</div>
+      ${cats.map(c => `
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs text-gray-400 w-10">${c.emoji}${c.label}</span>
+          <div class="flex-1 bg-gray-100 rounded-full h-1.5">
+            <div class="score-bar h-1.5 rounded-full" style="width:${getDisplayScore(d,c.key)*10}%; background:${scoreColor(getDisplayScore(d,c.key))}"></div>
+          </div>
+          <span class="text-xs font-semibold text-gray-500 w-6 text-right">${getDisplayScore(d,c.key)}</span>
+        </div>
+      `).join('')}
+      <div class="mt-3 pt-3 border-t border-gray-100">
+        <div class="text-xs text-gray-400">📍 ${d.cities}</div>
+        <div class="text-xs text-blue-400 mt-1">點擊查看詳情 →</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getDisplayScore(d, key) {
+  if (key === 'weather') {
+    if (prefs.weather === 'beach')   return d.wx.beach;
+    if (prefs.weather === 'comfort') return d.wx.comfort;
+    if (prefs.weather === 'cool')    return d.wx.cool;
+  }
+  return d.scores[key];
+}
+
+function renderCards(sorted) {
+  document.getElementById('count-label').textContent = `共 ${sorted.length} 個目的地`;
+  document.getElementById('cards').innerHTML = sorted.map((d, i) => {
+    const m = matchLabel(d.total);
+    return `
+    <div class="card bg-white rounded-xl border border-gray-100 shadow-sm p-4 card-in" style="animation-delay:${i*0.04}s" onclick="openModal('${d.id}')">
+      <div class="flex items-start justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">${d.flag}</span>
+          <div>
+            <span class="font-bold text-gray-800">${d.name}</span>
+            <span class="ml-1 text-xs text-gray-400">${d.region}</span>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-1">
+          <span class="font-black text-lg" style="color:${scoreColor(d.total)}">${d.total.toFixed(1)}</span>
+          <span class="tag" style="color:${m.color}; background:${m.bg}">${m.text}</span>
+        </div>
+      </div>
+      <div class="text-xs text-gray-400 mb-2">${d.tag}</div>
+      ${cats.map(c => `
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs text-gray-400 w-10">${c.emoji}${c.label}</span>
+          <div class="flex-1 bg-gray-100 rounded-full h-1">
+            <div class="score-bar h-1 rounded-full" style="width:${getDisplayScore(d,c.key)*10}%; background:${scoreColor(getDisplayScore(d,c.key))}"></div>
+          </div>
+          <span class="text-xs text-gray-400 w-5 text-right">${getDisplayScore(d,c.key)}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+
+function updateActiveLabel() {
+  const active = Object.entries(prefs).filter(([k,v]) => v !== 'any');
+  const labelEl = document.getElementById('active-label');
+  if (active.length === 0) {
+    labelEl.textContent = '目前全部不在意（顯示預設排名）';
+    labelEl.className = 'text-xs text-gray-400';
+  } else {
+    const prefLabels = {
+      weather: { beach:'熱帶沙灘', comfort:'溫和舒適', cool:'涼爽避暑' },
+      flight: { cheap:'機票便宜', medium:'中等機票', far:'飛遠沒問題' },
+      hotel: { budget:'平價住宿', medium:'適中住宿', quality:'品質住宿' },
+      safety: { basic:'基本安全', high:'高治安' },
+      cost: { cheap:'物價便宜', medium:'適中物價', premium:'高消費OK' },
+    };
+    const tags = active.map(([k,v]) => prefLabels[k][v]).join(' · ');
+    labelEl.textContent = `已設定：${tags}`;
+    labelEl.className = 'text-xs text-blue-500 font-medium';
+  }
+}
+
+function render() {
+  const sorted = getSorted();
+  renderTop3(sorted);
+  renderCards(sorted);
+  updateActiveLabel();
+}
+
+function resetPrefs() {
+  Object.keys(prefs).forEach(k => prefs[k] = 'any');
+  document.querySelectorAll('.pref-select').forEach(s => s.value = 'any');
+  render();
+}
+
+document.querySelectorAll('.pref-select').forEach(sel => {
+  sel.addEventListener('change', e => {
+    prefs[e.target.dataset.pref] = e.target.value;
+    render();
+  });
+});
+
+function openModal(id) {
+  const d = destinations.find(x => x.id === id);
+  const total = calcScore(d);
+  const m = matchLabel(total);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="flex items-center gap-3 mb-5">
+      <span class="text-5xl">${d.flag}</span>
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold text-gray-800">${d.name}</h2>
+        <div class="text-sm text-gray-400">${d.region} · ${d.tag}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-3xl font-black" style="color:${scoreColor(total)}">${total.toFixed(1)}</div>
+        <span class="tag" style="color:${m.color}; background:${m.bg}">${m.text}</span>
+      </div>
+    </div>
+    <div class="bg-blue-50 rounded-xl p-3 mb-4 text-sm text-blue-700">📍 推薦城市：${d.cities}</div>
+    <div class="space-y-2 mb-5">
+      ${cats.map(c => `
+        <div class="p-3 bg-gray-50 rounded-xl">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-semibold text-sm text-gray-700">${c.emoji} ${c.label}</span>
+            <div class="flex items-center gap-2">
+              <div class="w-20 bg-gray-200 rounded-full h-2">
+                <div style="width:${getDisplayScore(d,c.key)*10}%; background:${scoreColor(getDisplayScore(d,c.key))}" class="h-2 rounded-full"></div>
+              </div>
+              <span class="font-bold text-sm" style="color:${scoreColor(getDisplayScore(d,c.key))}">${getDisplayScore(d,c.key)}/10</span>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500">${d.details[c.key]}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="grid grid-cols-3 gap-2 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl text-center">
+      <div><div class="text-xs text-gray-400 mb-1">來回機票</div><div class="text-sm font-bold text-gray-700">${d.flight}</div></div>
+      <div class="border-x border-blue-100"><div class="text-xs text-gray-400 mb-1">住宿/晚</div><div class="text-sm font-bold text-gray-700">${d.hotel}</div></div>
+      <div><div class="text-xs text-gray-400 mb-1">每日預算</div><div class="text-sm font-bold text-gray-700">${d.daily}</div></div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
