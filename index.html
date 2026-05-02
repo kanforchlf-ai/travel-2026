@@ -153,6 +153,32 @@
         </select>
       </div>
 
+      <!-- Transport -->
+      <div class="flex items-center gap-4 px-6 py-4">
+        <div class="text-3xl w-10 text-center">🚆</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">對內對外交通便利性</div>
+          <div class="text-xs text-gray-400">直飛選擇多寡 ＋ 國內大眾運輸品質</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="transport">
+          <option value="any">不在意</option>
+          <option value="good">越方便越好</option>
+        </select>
+      </div>
+
+      <!-- UNESCO -->
+      <div class="flex items-center gap-4 px-6 py-4">
+        <div class="text-3xl w-10 text-center">🏛️</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">世界文化遺產密集度</div>
+          <div class="text-xs text-gray-400">旅遊路線中可造訪的 UNESCO 遺址數量</div>
+        </div>
+        <select class="pref-select border border-gray-200 rounded-xl text-sm text-gray-700 px-4 py-2.5 bg-gray-50 hover:border-blue-400 transition w-52" data-pref="unesco">
+          <option value="any">不在意</option>
+          <option value="dense">越密集越好</option>
+        </select>
+      </div>
+
     </div>
 
     <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
@@ -190,7 +216,7 @@
 
 <script>
 let season = 'summer';
-const prefs = { weather: 'any', flight: 'any', hotel: 'any', safety: 'any', cost: 'any', height: 'any', duration: 'any' };
+const prefs = { weather: 'any', flight: 'any', hotel: 'any', safety: 'any', cost: 'any', height: 'any', duration: 'any', transport: 'any', unesco: 'any' };
 
 // ── Data ──────────────────────────────────────────────────────
 const destinations = [
@@ -200,6 +226,9 @@ const destinations = [
     cities: { summer: '東京・大阪・京都・北海道', winter: '東京・京都・北海道（滑雪）' },
     flight: 'NT$8,000–15,000', hotel: 'NT$1,800–3,500/晚', daily: 'NT$1,500–2,500/日',
     heightAvg: 172, heightScore: 6.0,
+    transportScore: 9.5, unescoScore: 8.5,
+    transportNote: '新幹線・地鐵全國密布，台北直飛班次最多，交通便利度全球頂尖。',
+    unescoNote: '25 處世界遺產，京都・奈良・廣島・日光・白川鄉…旅遊路線上隨手即是遺址。',
     tripScore: { any: 10, short: 9.5 },
     scores: { flight: 8.5, hotel: 6.5, safety: 9.5, cost: 7.0 },
     wx: {
@@ -223,6 +252,9 @@ const destinations = [
     cities: { summer: '首爾・釜山・濟州島', winter: '首爾・江原道（滑雪）・釜山' },
     flight: 'NT$5,000–10,000', hotel: 'NT$1,500–3,000/晚', daily: 'NT$1,200–2,200/日',
     heightAvg: 174, heightScore: 6.5,
+    transportScore: 9.5, unescoScore: 7.0,
+    transportNote: 'KTX 高鐵連結首爾釜山，首爾地鐵完善，台北直飛班次多且便宜。',
+    unescoNote: '16 處世界遺產，慶州石窟庵・佛國寺・昌德宮・水原華城，集中在首爾周邊與慶州。',
     tripScore: { any: 10, short: 9.5 },
     scores: { flight: 9.0, hotel: 7.5, safety: 8.5, cost: 7.5 },
     wx: {
@@ -246,6 +278,9 @@ const destinations = [
     cities: { summer: '峴港・會安（乾季）', winter: '峴港・富國島・胡志明市' },
     flight: 'NT$5,000–10,000', hotel: 'NT$600–1,800/晚', daily: 'NT$500–1,200/日',
     heightAvg: 164, heightScore: 4.5,
+    transportScore: 6.5, unescoScore: 7.0,
+    transportNote: '台北直飛胡志明/河內/峴港，國內有火車但慢，峴港到會安需包車或計程車。',
+    unescoNote: '8 處世界遺產，會安古城・順化皇城・峴港的占婆遺址・下龍灣，中部集中度高。',
     tripScore: { any: 10, short: 9.5 },
     scores: { flight: 9.0, hotel: 9.0, safety: 7.5, cost: 9.5 },
     wx: {
@@ -269,6 +304,9 @@ const destinations = [
     cities: { summer: '清邁・清萊・曼谷', winter: '清邁・普吉島・蘇梅島・曼谷' },
     flight: 'NT$6,000–12,000', hotel: 'NT$900–2,000/晚', daily: 'NT$800–1,500/日',
     heightAvg: 167, heightScore: 5.0,
+    transportScore: 7.5, unescoScore: 5.5,
+    transportNote: '台北直飛曼谷/清邁，曼谷BTS/MRT完善，清邁市區需嘟嘟車或租車。',
+    unescoNote: '6 處世界遺產，素可泰・大城古城・阿瓦泰雅，集中曼谷北部，需另行前往。',
     tripScore: { any: 10, short: 9.5 },
     scores: { flight: 8.5, hotel: 9.0, safety: 6.5, cost: 9.0 },
     wx: {
@@ -292,6 +330,9 @@ const destinations = [
     cities: { summer: '烏布・庫塔・水明漾・努沙杜瓦', winter: '烏布・庫塔（雨季，仍可玩）' },
     flight: 'NT$8,000–14,000', hotel: 'NT$1,500–5,000/晚', daily: 'NT$800–1,800/日',
     heightAvg: 163, heightScore: 4.5,
+    transportScore: 6.0, unescoScore: 4.5,
+    transportNote: '台北直飛峇里島，島內無大眾運輸，需包車或租摩托車移動。',
+    unescoNote: '巴里島梯田農業系統（蘇巴克，2012年登錄），遺址景點較少。',
     tripScore: { any: 10, short: 9.0 },
     scores: { flight: 8.0, hotel: 8.5, safety: 7.5, cost: 9.0 },
     wx: {
@@ -315,6 +356,9 @@ const destinations = [
     cities: { summer: '里斯本・波多・阿爾加維海岸', winter: '里斯本・波多・辛特拉' },
     flight: 'NT$28,000–42,000', hotel: 'NT$2,500–4,500/晚', daily: 'NT$1,800–3,000/日',
     heightAvg: 172, heightScore: 7.0,
+    transportScore: 7.5, unescoScore: 8.0,
+    transportNote: '里斯本地鐵完善，火車連結波多・辛特拉・法羅，無直飛需轉機。',
+    unescoNote: '17 處世界遺產，里斯本塔・巴塔利亞修道院・辛特拉宮殿群・葡萄牙多羅河谷，密度高。',
     tripScore: { any: 8.0, short: 5.5 },
     scores: { flight: 4.0, hotel: 5.5, safety: 9.0, cost: 6.5 },
     wx: {
@@ -338,6 +382,9 @@ const destinations = [
     cities: { summer: '聖托里尼・雅典・米科諾斯', winter: '雅典・塞薩洛尼基（淡季）' },
     flight: 'NT$28,000–45,000', hotel: 'NT$2,000–7,000/晚', daily: 'NT$2,000–3,500/日',
     heightAvg: 177, heightScore: 7.5,
+    transportScore: 7.0, unescoScore: 9.0,
+    transportNote: '雅典地鐵方便，島嶼間需搭渡輪（1–8小時），無直飛需轉機。',
+    unescoNote: '18 處世界遺產，雅典衛城・德爾菲・奧林匹亞・邁錫尼・聖托里尼近郊…密度極高。',
     tripScore: { any: 7.5, short: 4.5 },
     scores: { flight: 3.5, hotel: 5.5, safety: 7.5, cost: 6.5 },
     wx: {
@@ -361,6 +408,9 @@ const destinations = [
     cities: { summer: '杜布羅夫尼克・斯普利特・普利特維采', winter: '薩格雷布（聖誕市集）' },
     flight: 'NT$30,000–48,000', hotel: 'NT$2,000–4,500/晚', daily: 'NT$1,800–3,000/日',
     heightAvg: 180, heightScore: 8.5,
+    transportScore: 6.0, unescoScore: 8.5,
+    transportNote: '斯普利特/杜布羅夫尼克需巴士或渡輪連結，無直飛，但主要景點集中在達爾馬提亞海岸。',
+    unescoNote: '10 處世界遺產，杜布羅夫尼克古城・普利特維采湖群・斯普利特戴克里先宮，沿海岸線密集分佈。',
     tripScore: { any: 7.5, short: 4.5 },
     scores: { flight: 3.5, hotel: 5.5, safety: 9.0, cost: 6.5 },
     wx: {
@@ -384,6 +434,9 @@ const destinations = [
     cities: { summer: '巴塞隆納・馬德里・聖塞巴斯提安', winter: '馬德里・巴塞隆納・加那利群島' },
     flight: 'NT$28,000–42,000', hotel: 'NT$2,500–5,500/晚', daily: 'NT$2,000–3,500/日',
     heightAvg: 174, heightScore: 7.0,
+    transportScore: 8.5, unescoScore: 9.0,
+    transportNote: 'AVE 高鐵連結馬德里・巴塞隆納・塞維亞，巴塞隆納地鐵完善，無直飛需轉機。',
+    unescoNote: '50 處世界遺產，高第建築・格拉納達阿爾罕布拉宮・塞哥維亞・托雷多古城，密度極高。',
     tripScore: { any: 8.0, short: 5.5 },
     scores: { flight: 4.0, hotel: 5.0, safety: 7.5, cost: 6.0 },
     wx: {
@@ -407,6 +460,9 @@ const destinations = [
     cities: { summer: '羅馬・佛羅倫斯・威尼斯', winter: '羅馬・佛羅倫斯・威尼斯（少人潮）' },
     flight: 'NT$28,000–42,000', hotel: 'NT$3,000–6,000/晚', daily: 'NT$2,500–4,000/日',
     heightAvg: 177, heightScore: 7.5,
+    transportScore: 8.5, unescoScore: 10.0,
+    transportNote: 'Trenitalia/Italo 高鐵連結各大城，羅馬/米蘭/佛羅倫斯地鐵完善，無直飛需轉機。',
+    unescoNote: '58 處世界遺產（全球第一），羅馬歷史中心・梵蒂岡・龐貝・威尼斯・佛羅倫斯・阿瑪菲海岸，密度全球無敵。',
     tripScore: { any: 8.0, short: 5.5 },
     scores: { flight: 4.0, hotel: 4.5, safety: 7.0, cost: 5.5 },
     wx: {
@@ -430,6 +486,9 @@ const destinations = [
     cities: { summer: '布拉格・克魯姆洛夫', winter: '布拉格（雪景）・克魯姆洛夫' },
     flight: 'NT$28,000–40,000', hotel: 'NT$1,800–3,500/晚', daily: 'NT$1,500–2,500/日',
     heightAvg: 180, heightScore: 8.5,
+    transportScore: 8.0, unescoScore: 9.5,
+    transportNote: '布拉格地鐵＋電車極佳，火車連結克魯姆洛夫・卡羅維瓦利，無直飛需轉機。',
+    unescoNote: '16 處世界遺產，布拉格歷史中心・克魯姆洛夫・萊德尼采－瓦爾季采，小國高密度，走路即達。',
     tripScore: { any: 8.0, short: 5.5 },
     scores: { flight: 4.0, hotel: 6.5, safety: 8.5, cost: 7.0 },
     wx: {
@@ -453,6 +512,9 @@ const destinations = [
     cities: { summer: '伊斯坦堡・卡帕多奇亞・棉堡', winter: '伊斯坦堡・卡帕多奇亞（雪地熱氣球）' },
     flight: 'NT$15,000–28,000', hotel: 'NT$1,000–2,500/晚', daily: 'NT$800–1,800/日',
     heightAvg: 174, heightScore: 6.5,
+    transportScore: 7.5, unescoScore: 8.0,
+    transportNote: '伊斯坦堡地鐵＋電車完善，國內廉航便宜，有直飛選擇，卡帕多奇亞需包車。',
+    unescoNote: '21 處世界遺產，伊斯坦堡歷史區・以弗所・特洛伊・卡帕多奇亞・棉堡，分佈廣但可規劃路線。',
     tripScore: { any: 9.0, short: 7.0 },
     scores: { flight: 6.0, hotel: 8.0, safety: 5.5, cost: 8.5 },
     wx: {
@@ -476,6 +538,9 @@ const destinations = [
     cities: { summer: '雷克雅維克・黃金圈（白夜）', winter: '雷克雅維克・黃金圈（極光！）' },
     flight: 'NT$35,000–55,000', hotel: 'NT$5,000–9,000/晚', daily: 'NT$4,000–8,000/日',
     heightAvg: 181, heightScore: 9.0,
+    transportScore: 4.5, unescoScore: 3.0,
+    transportNote: '首都雷克雅維克公車有限，景點必須自駕，無直飛需轉機，距離遠。',
+    unescoNote: '僅1處世界遺產（辛格韋德利國家公園），壯觀地景靠自然奇觀而非人文遺址。',
     tripScore: { any: 5.5, short: 3.0 },
     scores: { flight: 3.0, hotel: 2.5, safety: 9.5, cost: 2.5 },
     wx: {
@@ -499,6 +564,9 @@ const destinations = [
     cities: { summer: '溫哥華・班夫國家公園', winter: '溫哥華・惠斯勒（滑雪）・班夫' },
     flight: 'NT$38,000–58,000', hotel: 'NT$3,500–6,500/晚', daily: 'NT$3,000–5,000/日',
     heightAvg: 176, heightScore: 7.5,
+    transportScore: 6.0, unescoScore: 5.5,
+    transportNote: '城市間需搭內陸班機或長途巴士，無直飛需轉機，距離台灣最遠。',
+    unescoNote: '22 處世界遺產，但分散在廣大國土，班夫・魁北克・尼加拉瓜瀑布周邊，旅遊路線難以集中。',
     tripScore: { any: 5.5, short: 3.0 },
     scores: { flight: 3.0, hotel: 4.0, safety: 8.5, cost: 4.5 },
     wx: {
@@ -522,6 +590,9 @@ const destinations = [
     cities: { summer: '倫敦・愛丁堡・科茲沃爾德', winter: '倫敦・愛丁堡（跨年！）' },
     flight: 'NT$28,000–45,000', hotel: 'NT$4,500–8,000/晚', daily: 'NT$3,500–6,000/日',
     heightAvg: 176, heightScore: 7.5,
+    transportScore: 8.5, unescoScore: 7.5,
+    transportNote: '倫敦地鐵完善，英鐵連結各城，希斯洛機場是全球最大轉機樞紐，無直飛但班次多。',
+    unescoNote: '33 處世界遺產，倫敦塔・巨石陣・巴斯古城・愛丁堡・約克，分佈英格蘭蘇格蘭，交通可達。',
     tripScore: { any: 7.5, short: 5.0 },
     scores: { flight: 3.5, hotel: 3.5, safety: 7.0, cost: 4.0 },
     wx: {
@@ -545,6 +616,9 @@ const destinations = [
     cities: { summer: '阿姆斯特丹・海牙・鹿特丹', winter: '阿姆斯特丹・代爾夫特' },
     flight: 'NT$28,000–42,000', hotel: 'NT$3,000–5,500/晚', daily: 'NT$2,500–4,000/日',
     heightAvg: 183, heightScore: 10.0,
+    transportScore: 9.0, unescoScore: 7.0,
+    transportNote: '阿姆斯特丹火車＋自行車完善，NS 鐵路密布全國，史基浦機場歐洲重要轉機樞紐。',
+    unescoNote: '12 處世界遺產，阿姆斯特丹運河區・辛格爾格拉赫特・小孩堤防風車，集中且步行可達。',
     tripScore: { any: 8.0, short: 5.5 },
     scores: { flight: 4.0, hotel: 4.5, safety: 8.5, cost: 5.5 },
     wx: {
@@ -568,6 +642,9 @@ const destinations = [
     cities: { summer: '卑爾根・松達爾峽灣（白夜）', winter: '特羅姆瑟（極光）・盧福敦群島' },
     flight: 'NT$32,000–50,000', hotel: 'NT$4,000–8,000/晚', daily: 'NT$3,500–6,500/日',
     heightAvg: 181, heightScore: 9.0,
+    transportScore: 6.0, unescoScore: 5.5,
+    transportNote: '奧斯陸市區交通尚可，峽灣地區需搭渡輪＋巴士，無直飛需轉機，距離遠。',
+    unescoNote: '8 處世界遺產，布呂根木屋街・烏爾內斯木板教堂・魯坎工業遺址，遺址少但獨特。',
     tripScore: { any: 5.5, short: 3.5 },
     scores: { flight: 3.0, hotel: 3.0, safety: 9.5, cost: 3.0 },
     wx: {
@@ -589,13 +666,15 @@ const destinations = [
 
 // ── Scoring ──────────────────────────────────────────────────
 const cats = [
-  { key: 'weather', label: '天氣', emoji: '☀️' },
-  { key: 'flight', label: '機票', emoji: '💺' },
-  { key: 'hotel', label: '住宿', emoji: '🏨' },
-  { key: 'safety', label: '治安', emoji: '🛡️' },
-  { key: 'cost', label: '物價', emoji: '💰' },
-  { key: 'height', label: '身高', emoji: '📏' },
-  { key: 'duration', label: '天數', emoji: '🗓️' },
+  { key: 'weather',   label: '天氣', emoji: '☀️' },
+  { key: 'flight',    label: '機票', emoji: '💺' },
+  { key: 'hotel',     label: '住宿', emoji: '🏨' },
+  { key: 'safety',    label: '治安', emoji: '🛡️' },
+  { key: 'cost',      label: '物價', emoji: '💰' },
+  { key: 'height',    label: '身高', emoji: '📏' },
+  { key: 'duration',  label: '天數', emoji: '🗓️' },
+  { key: 'transport', label: '交通', emoji: '🚆' },
+  { key: 'unesco',    label: '遺產', emoji: '🏛️' },
 ];
 
 function scoreColor(s) {
@@ -651,6 +730,14 @@ function calcScore(d) {
   if (prefs.height === 'tall') { total += d.heightScore * 3; w += 3; }
   else { total += d.heightScore * 0.3; w += 0.3; }
 
+  // Transport
+  if (prefs.transport === 'good') { total += d.transportScore * 3; w += 3; }
+  else { total += d.transportScore * 0.5; w += 0.5; }
+
+  // UNESCO
+  if (prefs.unesco === 'dense') { total += d.unescoScore * 3; w += 3; }
+  else { total += d.unescoScore * 0.3; w += 0.3; }
+
   // Duration
   if (prefs.duration === 'short') {
     const ds = d.tripScore.short;
@@ -674,13 +761,15 @@ function getSorted() {
 
 function getDisplayScores(d) {
   return {
-    weather: getWeatherScore(d),
-    flight: d.scores.flight,
-    hotel: d.scores.hotel,
-    safety: d.scores.safety,
-    cost: d.scores.cost,
-    height: d.heightScore,
-    duration: prefs.duration === 'short' ? d.tripScore.short : d.tripScore.any,
+    weather:   getWeatherScore(d),
+    flight:    d.scores.flight,
+    hotel:     d.scores.hotel,
+    safety:    d.scores.safety,
+    cost:      d.scores.cost,
+    height:    d.heightScore,
+    duration:  prefs.duration === 'short' ? d.tripScore.short : d.tripScore.any,
+    transport: d.transportScore,
+    unesco:    d.unescoScore,
   };
 }
 
@@ -782,8 +871,10 @@ function updateActiveLabel() {
       hotel: { budget:'平價住宿', medium:'適中住宿', quality:'品質住宿' },
       safety: { basic:'基本安全', high:'高治安' },
       cost: { cheap:'物價便宜', medium:'適中物價', premium:'高消費OK' },
-      height: { tall:'高個子居多' },
-      duration: { short:'10–12天' },
+      height:    { tall:'高個子居多' },
+      duration:  { short:'10–12天' },
+      transport: { good:'交通方便' },
+      unesco:    { dense:'世界遺產密集' },
     };
     const tags = active.map(([k,v]) => prefLabels[k]?.[v] || v).join(' · ');
     labelEl.textContent = `${seasonLabel}・${tags}`;
@@ -865,10 +956,30 @@ function openModal(id) {
           <div class="text-xs text-gray-500">${c.text}</div>
         </div>`).join('')}
       <div class="p-3 bg-gray-50 rounded-xl">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-1.5">
           <span class="font-semibold text-sm text-gray-700">📏 當地男性平均身高</span>
           <span class="font-bold text-sm text-gray-700">${d.heightAvg} cm</span>
         </div>
+      </div>
+      <div class="p-3 bg-gray-50 rounded-xl">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="font-semibold text-sm text-gray-700">🚆 交通便利性</span>
+          <div class="flex items-center gap-2">
+            <div class="w-20 bg-gray-200 rounded-full h-2"><div style="width:${ds.transport*10}%; background:${scoreColor(ds.transport)}" class="h-2 rounded-full"></div></div>
+            <span class="font-bold text-sm" style="color:${scoreColor(ds.transport)}">${ds.transport}/10</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500">${d.transportNote}</div>
+      </div>
+      <div class="p-3 bg-gray-50 rounded-xl">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="font-semibold text-sm text-gray-700">🏛️ 世界文化遺產密集度</span>
+          <div class="flex items-center gap-2">
+            <div class="w-20 bg-gray-200 rounded-full h-2"><div style="width:${ds.unesco*10}%; background:${scoreColor(ds.unesco)}" class="h-2 rounded-full"></div></div>
+            <span class="font-bold text-sm" style="color:${scoreColor(ds.unesco)}">${ds.unesco}/10</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500">${d.unescoNote}</div>
       </div>
     </div>
     <div class="grid grid-cols-3 gap-2 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl text-center">
