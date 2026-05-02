@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2026 旅遊推薦</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', sans-serif; }
   .card { transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
@@ -184,6 +186,23 @@
     <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
       <button onclick="resetPrefs()" class="text-sm text-gray-400 hover:text-gray-600 transition">重設</button>
       <div class="text-xs text-gray-400" id="active-label">目前全部不在意</div>
+    </div>
+  </div>
+</section>
+
+<!-- World Map -->
+<section class="max-w-5xl mx-auto mt-6 px-4">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-blue-50 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🗺️</span>
+        <h2 class="font-bold text-gray-800">從台灣出發的世界地圖</h2>
+        <span class="text-xs text-gray-400">弧線越粗、顏色越綠＝評分越高・點擊標記開啟詳情</span>
+      </div>
+    </div>
+    <div id="map-container" class="relative" style="height:460px; background:#e8f4fd;">
+      <svg id="world-map" style="width:100%;height:100%;"></svg>
+      <div id="map-tooltip" class="hidden absolute pointer-events-none z-10 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg leading-5"></div>
     </div>
   </div>
 </section>
@@ -892,6 +911,7 @@ function render() {
   const sorted = getSorted();
   renderTop3(sorted);
   renderCards(sorted);
+  updateMapArcs();
 }
 
 function resetPrefs() {
@@ -997,8 +1017,122 @@ function closeModal(e) {
   }
 }
 
+// ── World Map ─────────────────────────────────────────────────
+const TAIWAN = [121.5, 25.0];
+const DEST_COORDS = {
+  japan:[139.7,35.7], korea:[126.9,37.6], vietnam:[108.2,16.1],
+  thailand:[100.5,13.7], bali:[115.2,-8.7], portugal:[-9.1,38.7],
+  greece:[23.7,37.9], croatia:[18.1,42.6], spain:[2.2,41.4],
+  italy:[12.5,41.9], czech:[14.4,50.1], turkey:[28.9,41.0],
+  iceland:[-22.0,64.1], canada:[-123.1,49.3], uk:[-0.1,51.5],
+  netherlands:[4.9,52.4], norway:[10.7,59.9],
+};
+let _mapProj = null, _mapPath = null, _mapSvg = null, _mapReady = false;
+
+function initMap() {
+  const container = document.getElementById('map-container');
+  const W = container.clientWidth, H = container.clientHeight;
+  _mapSvg = d3.select('#world-map').attr('width', W).attr('height', H);
+  _mapProj = d3.geoNaturalEarth1()
+    .rotate([-121.5, 0, 0]).scale(W / 6.3).translate([W / 2, H / 2]);
+  _mapPath = d3.geoPath().projection(_mapProj);
+
+  // ocean
+  _mapSvg.append('rect').attr('width', W).attr('height', H).attr('fill', '#daeef8');
+  // graticule
+  _mapSvg.append('path')
+    .datum(d3.geoGraticule().step([30, 30])())
+    .attr('d', _mapPath).attr('fill', 'none')
+    .attr('stroke', '#b8dff0').attr('stroke-width', 0.4);
+  // land
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+    _mapSvg.append('g').selectAll('path')
+      .data(topojson.feature(world, world.objects.countries).features)
+      .join('path').attr('d', _mapPath)
+      .attr('fill', '#d4e6c3').attr('stroke', '#9ab88a').attr('stroke-width', 0.4);
+    _mapReady = true;
+    updateMapArcs();
+  });
+}
+
+function updateMapArcs() {
+  if (!_mapReady) return;
+  _mapSvg.selectAll('.map-dyn').remove();
+  const sorted = getSorted();
+  const g = _mapSvg.append('g').attr('class', 'map-dyn');
+
+  // Arcs
+  sorted.forEach((d, i) => {
+    const coords = DEST_COORDS[d.id]; if (!coords) return;
+    const col = scoreColor(d.total);
+    const sw = 0.6 + (d.total / 10) * 3;
+    const arcEl = g.append('path')
+      .datum({ type: 'LineString', coordinates: [TAIWAN, coords] })
+      .attr('d', _mapPath).attr('fill', 'none')
+      .attr('stroke', col).attr('stroke-width', sw)
+      .attr('stroke-opacity', 0.25 + (d.total / 10) * 0.65)
+      .attr('stroke-linecap', 'round');
+    const len = arcEl.node().getTotalLength();
+    arcEl.attr('stroke-dasharray', len).attr('stroke-dashoffset', len)
+      .transition().duration(700).delay(i * 55).ease(d3.easeQuadOut)
+      .attr('stroke-dashoffset', 0);
+  });
+
+  // Destination markers
+  sorted.forEach((d, i) => {
+    const coords = DEST_COORDS[d.id]; if (!coords) return;
+    const [x, y] = _mapProj(coords);
+    if (!x || !y || isNaN(x) || isNaN(y)) return;
+    const col = scoreColor(d.total);
+    const r = 3.5 + (d.total / 10) * 5;
+    // shadow
+    g.append('circle').attr('cx', x).attr('cy', y + 1.5)
+      .attr('r', r).attr('fill', 'rgba(0,0,0,0.15)');
+    // dot
+    g.append('circle').attr('cx', x).attr('cy', y)
+      .attr('r', r).attr('fill', col)
+      .attr('stroke', 'white').attr('stroke-width', 1.5)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event) {
+        const c = document.getElementById('map-container').getBoundingClientRect();
+        const tip = document.getElementById('map-tooltip');
+        tip.innerHTML = `<span style="font-weight:700">${d.flag} ${d.name}</span>&nbsp; <span style="color:#6ee7b7">${d.total.toFixed(1)}</span><br><span style="color:#9ca3af">${d.tag}</span>`;
+        tip.classList.remove('hidden');
+        const ex = event.clientX - c.left, ey = event.clientY - c.top;
+        tip.style.left = (ex + 14) + 'px';
+        tip.style.top  = (ey - 14) + 'px';
+        d3.select(this).attr('r', r * 1.45).attr('stroke-width', 2.5);
+      })
+      .on('mouseout', function() {
+        document.getElementById('map-tooltip').classList.add('hidden');
+        d3.select(this).attr('r', r).attr('stroke-width', 1.5);
+      })
+      .on('click', () => openModal(d.id));
+    // label for top 5
+    if (i < 5) {
+      g.append('text').attr('x', x + r + 3).attr('y', y + 4)
+        .text(d.name).attr('font-size', '11px').attr('font-weight', '700')
+        .attr('fill', '#1e293b').attr('stroke', 'white')
+        .attr('stroke-width', 2.5).attr('paint-order', 'stroke')
+        .style('pointer-events', 'none');
+    }
+  });
+
+  // Taiwan marker
+  const [twX, twY] = _mapProj(TAIWAN);
+  g.append('circle').attr('cx', twX).attr('cy', twY)
+    .attr('r', 7).attr('fill', '#ef4444')
+    .attr('stroke', 'white').attr('stroke-width', 2);
+  g.append('text').attr('x', twX + 10).attr('y', twY + 4)
+    .text('🇹🇼 台灣').attr('font-size', '12px').attr('font-weight', '800')
+    .attr('fill', '#1e293b').attr('stroke', 'white')
+    .attr('stroke-width', 3).attr('paint-order', 'stroke')
+    .style('pointer-events', 'none');
+}
+
 updateSeasonUI();
 render();
+initMap();
 </script>
 </body>
 </html>
